@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>用户列表 </title>
+    <link rel="stylesheet" href="../../static/common/layui/css/layui.css">
+   
+    <script src="../../static/common/layui/layui.js"></script>
+    <script src="../../static/common/jquery-3.3.1.min.js"></script>
+    <script src="../../static/common/vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+ 
+
+    <div class="main" id="app">
+       
+        <!--右侧-->
+        <div class="right">
+
+
+            <div class="layui-row">
+                <div class="layui-col-lg8">
+                    <a href="?/admin/user/index/connect/qq.html" class="layui-btn">QQ</a>
+
+                    <a href="?/admin/user/index/connect/weibo.html" class="layui-btn">微博</a>
+                    <a href="?/admin/user/index/connect/weixin.html" class="layui-btn">微信</a>
+                    <a href="?/admin/user/index/connect/alipay.html" class="layui-btn">支付宝</a>
+                    <a href="?/admin/user/index/connect/xcx.html" class="layui-btn">小程序</a>
+                </div>
+
+                <div  class="layui-col-lg4" style="text-align: right">
+
+                    <div class="layui-input-inline" style="width: 300px">
+                        <input type="text" name="search" value="" placeholder="手机/用户名/邮箱/昵称" class="layui-input key">
+                    </div>
+                    <button type="button" class="layui-btn sou">搜索</button>
+                </div>
+            </div>
+           <!--   -->
+           <table class="layui-hide" id="test"></table>
+           <!--   --> 
+
+        
+
+            <div class="page">
+                
+            </div>
+
+
+        </div>
+    </div>
+</div>
+<script src="../../static/config.js"></script>
+<script src="../../static/script.js"></script>
+
+<script>
+    layui.use('table', function(){
+      var table = layui.table;
+      table.render({
+        elem: '#test'
+        ,url:'http://localhost/admin/php/public/page.php'
+        ,cols: [[
+          {field:'id',  title: 'Id'}
+          ,{field:'UserName', title: '用户名'}
+          ,{field:'NickName' , title: '姓名'}
+          ,{field:'Remark',   title: '备注'}
+          ,{field:'Email', title: '邮箱' }
+          ,{field:'AddTime', title: '注册时间' }
+          ,{field:'Status', title: '用户状态'}
+        ]]
+          ,id: 'testReload'
+          ,page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+              layout: [ 'limit','count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+              //,curr: 1 //设定初始在第 2 页
+              ,groups: 1 //只显示 1 个连续页码
+              ,first: false //显示首页
+              ,last: false //不显示尾页
+    
+          }
+      });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>后台管理</title>
+    <link rel="stylesheet" href="../../static/common/layui/css/layui2.css">
+    <script src="../../static/common/layui/layui.js"></script>
+    <script src="../../static/common/jquery-3.3.1.min.js"></script>
+    <script src="../../static/common/vue.min.js"></script>
+    <script src="../../static/common/axios.min.js"></script>
+</head>
+<body>
+<div id="app">
+ 
+
+    <div class="main">
+   
+        <!--右侧-->
+        <div class="right" id="app2">
+
+            <div v-if="run" class="layui-progress  layui-progress-big" lay-showPercent="yes">
+                <div class="layui-progress-bar layui-bg-red" :style="{width:d+'%'}">{{d}}%</div>
+            </div>
+
+            <table class="layui-table layui-form">
+                <colgroup>
+                    <col width="50">
+                    <col width="300">
+                    <col width="300">
+                    <col width="200">
+                    <col width="200">
+                    <col width="200">
+                    <col width="100">
+                    <col width="300">
+                    <col width="150">
+                    <col width="100">
+                </colgroup>
+                <thead>
+                <tr>
+                    <th><input lay-filter="all" type="checkbox"  lay-skin="primary" ></th>
+                    <th>表名</th>
+                    <th>表说明</th>
+                    <th>引擎</th>
+                    <th>编码</th>
+                    <th>数据量</th>
+                    <th>数据大小</th>
+                    <th>创建时间</th>
+                    <th>备份状态</th>
+                
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr v-for="(vo,i) in list">
+                    <td><input type="checkbox" lay-filter="vo" :data-id="i" v-model="vo.Selected" :value="vo.Selected" lay-skin="primary" ></td>
+                    <td>{{vo.Name}}</td>
+                    <td>{{vo.Comment}}</td>
+                    <td>{{vo.Engine}}</td>
+                    <td>{{vo.Collation}}</td>
+                    <td>{{vo.Rows}}</td>
+                    <td>{{vo.Data_length}}</td>
+                    <td>{{vo.Create_time}}</td>
+                    <td>{{vo.Is}}</td>
+                    
+                </tr>
+
+
+                </tbody>
+
+                <tfoot>
+
+                <tr>
+                    <td colspan="99" >
+                         <input type="checkbox" lay-filter="single" v-model="single" lay-skin="primary" >
+                        &nbsp;&nbsp;&nbsp;&nbsp;所有表合并成一个文件
+       
+                        <a href="javascript:;" style="float: right;"  @click="auto" class="layui-btn layui-btn-normal">自动备份</a>
+                        <a href="javascript:;" style="float: right;  margin-right: 20px;" @click="backups" class="layui-btn">一键备份</a>
+                    </td>
+                </tr>
+
+                </tfoot>
+            </table>
+
+
+
+        </div>
+    </div>
+</div> 
+
+
+<script>
+ /*
+  
+
+}
+ */
+          
+
+    var vue = new Vue({   
+        el: '#app2',
+        data: {
+            list: [],
+            all:false,
+            single:true,
+            c:0,
+            t:0,
+            d:0,
+            run:false,
+        },    created:function(){
+
+        //加载左侧菜单
+        let data = sessionStorage.list;
+        if(!data){
+            console.log(88)
+            $.ajax({
+                url: "http://localhost/admin/php/public/systeminfo.php",
+                dataType: 'text',
+                success:  (data) => {
+                    data = eval('(' + data + ')');
+                    sessionStorage.list = JSON.stringify(data);
+                    this.list = list;
+                    this.thisActive();
+                    this.thisAttr();
+                }
+            })
+        }else{
+            this.list = JSON.parse(data);
+           // this.thisActive();
+            //this.thisAttr();
+        }
+
+
+    }
+      ,methods:{
+      backups:function(){
+                if(this.count()>0){
+                    this.c = this.count();
+                    this.t = 0;
+                    this.d = 0;
+                }else{
+                    layer.msg("你还未选择要备份的表",function(){}); //总个数
+                    return false;
+                }
+
+                this.run = true;
+
+                !(function h(i,self) {
+                    if(i>=self.list.length){
+                        setTimeout(function(){
+                            layui.layer.msg("备份完成",{icon:1})
+                            self.run = false;
+                        },1000)
+                        return false;
+                    }
+                    if(self.list[i].Selected){
+                        self.list[i].Is="正在备份...";                     
+                        //var url = self.single ? self.list[i].Url+"&single=1" : self.list[i].Url;                      
+                        var url="http://localhost/admin/php/public/backup.php?name="+self.list[i].Name;
+                        $.get(url,function(e){   
+                            //解析JSON数据                                        
+                            e = eval('(' + e + ')');
+                            if(e.code==1){ 
+                                 self.list[i].Selected = false;
+                                 self.list[i].Is="√备份成功";
+                            }else{
+                                self.list[i].Is="×备份失败";
+                            }
+                            self.t++;
+                            self.d = self.t/self.c*100;
+                            h((i+1),self);
+                            setTimeout(function(){
+                                layui.form.render();
+                            },5)
+                        })
+                    }else{
+                        h((i+1),self);
+                    }
+                })(0,this);
+ 
+            },
+            backup:function(i,url){
+                var self = this;
+                var url = self.single ? url+"&single=1" : url;
+                self.list[i].Is="正在备份...";
+                $.get(url,function(e){
+                    if(e.code==1){
+                        self.list[i].Selected = false;
+                        self.list[i].Is="√备份成功";
+                    }else{
+                        self.list[i].Is="×备份失败";
+                    }
+                })
+            },
+            count:function(){ //计算选中的个数
+                for (var i=0,c=0;i<this.list.length;i++) {
+                    if(this.list[i].Selected){
+                        c++
+                    }
+                }
+                return c;
+            },
+            auto:function(){
+                layui.layer.msg("开发中...",function(){});
+            }
+        }
+    })
+ 
+    layui.use('form', function () {
+        var form = layui.form, layer = layui.layer, $ = layui.jquery;
+        form.on('checkbox(all)', function(data){
+            for(var i=0;i<vue.list.length;i++){
+                vue.list[i].Selected = data.elem.checked;
+            }
+            setTimeout(function(){
+                form.render();
+            },5)
+
+        });
+
+        form.on('checkbox(vo)', function(data){
+            var id = $(data.elem).attr("data-id");
+            for(var i=0;i<vue.list.length;i++){
+                if(i==id){
+                    vue.list[i].Selected = data.elem.checked;
+                }
+            }
+        });
+
+        form.on('checkbox(single)', function(data){
+            vue.single = data.elem.checked;
+        });
+
+
+        form.on('switch(state)', function(data) {
+            var id = $(data.elem).attr("data-id");
+            $.ajax({
+                url: "/admin/mysql/state.html",
+                data: {
+                    id: id,
+                },
+                type: "get",
+                dataType: "json",
+                success: function(e) {
+                    if (e.code== 1) {
+                        layer.msg(e.msg, {
+                            icon: 1
+                        });
+                    } else {
+                        layer.msg(e.msg, {
+                            icon: 2,
+                            shade: 0.5,
+                            time: 2000,
+                            shadeClose: true
+                        });
+                    }
+                }
+            });
+        });
+    });
+ 
+ 
+</script>
+ 
+</body>
+</html>
